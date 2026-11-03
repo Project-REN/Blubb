@@ -1455,3 +1455,34 @@ button.crop-choice.selected {
 .welcome-copy .small-note {
   margin-top: 16px;
 }
+
+.welcome-art {
+  background:
+    linear-gradient(rgb(248 248 242 / 15%), rgb(248 248 242 / 15%)),
+    url('./assets/planting.jpg') center / cover no-repeat;
+}
+
+.welcome-art .sun,
+.welcome-art .hill,
+.welcome-art .field-lines,
+.welcome-art .plant {
+  display: none;
+}
+
+.welcome-art-label {
+  display: none;
+}
+
+body:has(.welcome-page) {
+  background: #f3ecdc;
+}
+
+body:has(.welcome-page) .topbar {
+  background: #faf5e8;
+  border-bottom-color: #e6dcc4;
+}
+
+body:has(.welcome-page) .language-button {
+  background: #f3ecdc;
+  border-color: #e0d5ba;
+}
