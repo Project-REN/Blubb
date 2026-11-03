@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import './App.css'
+import PlantOrWait from './components/PlantOrWait'
 
 const API_URL = 'http://localhost:5002/api/mock/crops/1/health'
 
@@ -10,11 +11,11 @@ const translations = {
     help: 'Help & guidance',
     switchLanguage: 'አማርኛ',
 
-    welcomeEyebrow: 'A FRIENDLIER WAY TO CARE FOR YOUR FARM',
-    welcomeTitle1: 'Your crops matter.',
-    welcomeTitle2: "We're here to help.",
+    welcomeEyebrow: 'BETTER DECISIONS FOR YOUR FARM',
+    welcomeTitle1: 'Know when',
+    welcomeTitle2: "it's time to plant.",
     welcomeText:
-      'Understand your farm conditions, keep an eye on your crops, and find helpful information—all in one simple place.',
+      'Check the weather, keep track of your crops, and get information to help you decide when to plant.',
     setupFarm: "Let's set up your farm",
     welcomeNote: 'Simple steps. Clear information. Made with farmers in mind.',
     chooseCrops: 'Choose your crops',
@@ -151,11 +152,11 @@ const translations = {
     help: 'እገዛ እና መመሪያ',
     switchLanguage: 'English',
 
-    welcomeEyebrow: 'እርሻዎን ለመንከባከብ ቀላል መንገድ',
-    welcomeTitle1: 'ሰብሎችዎ ወሳኝ ናቸው።',
-    welcomeTitle2: 'እኛ ለመርዳት እዚህ ነን።',
+    welcomeEyebrow: 'ለተሻለ የእርሻ ውሳኔ',
+    welcomeTitle1: 'መቼ መዝራት ',
+    welcomeTitle2: 'እንዳለብዎት ይወቁ።',
     welcomeText:
-      'የእርሻዎን ሁኔታ ይረዱ፣ ሰብሎችዎን ይከታተሉ፣ ጠቃሚ መረጃም በአንድ ቦታ ያግኙ።',
+      'የአየር ሁኔታን ይከታተሉ፣ ስለ ሰብሎችዎ መረጃ ያግኙ፣ እና መቼ መዝራት እንደሚሻል ለመወሰን የሚረዳዎትን መረጃ ይጠቀሙ።',
     setupFarm: 'እርሻዎን እናዘጋጅ',
     welcomeNote: 'ቀላል እርምጃዎች። ግልጽ መረጃ። ለገበሬዎች የተዘጋጀ።',
     chooseCrops: 'ሰብሎችዎን ይምረጡ',
@@ -752,6 +753,8 @@ function toggleLanguage() {
                 </button>
               ))}
             </div>
+
+            <PlantOrWait decision="PLANT" reason="Rain is steady. Good time to plant." />
 
             {activeCrop === 'Wheat' && (
               <>

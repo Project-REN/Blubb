@@ -391,10 +391,11 @@ button:disabled {
 }
 
 .welcome-benefits article {
-  padding: 21px;
-  border: 1px solid var(--border);
-  border-radius: 17px;
-  background: #fff;
+  padding: 18px 0 0;
+  border: 0;
+  border-top: 2px solid var(--green);
+  border-radius: 0;
+  background: transparent;
 }
 
 .benefit-icon {
@@ -1414,4 +1415,43 @@ button.crop-choice.selected {
   .app-footer {
     gap: 8px 14px;
   }
+}
+
+.welcome-benefits {
+  counter-reset: step;
+}
+
+.welcome-benefits article {
+  counter-increment: step;
+  text-align: left;
+}
+
+.welcome-benefits article::before {
+  content: "0" counter(step);
+  display: block;
+  margin-bottom: 10px;
+  color: var(--green);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.benefit-icon {
+  display: none;
+}
+
+.welcome-copy {
+  text-align: left;
+}
+
+.welcome-copy h1 {
+  line-height: 1.15;
+}
+
+.welcome-art-label span:first-child {
+  display: none;
+}
+
+.welcome-copy .small-note {
+  margin-top: 16px;
 }

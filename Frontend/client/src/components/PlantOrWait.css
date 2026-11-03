@@ -1,0 +1,25 @@
+.plant-word {
+  color: #825b17;
+  font-size: 40px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  margin: 0 0 8px;
+}
+.plant-card {
+  background: #fff4df;
+  color: #825b17;
+  border: 1px solid #f0dfb8;
+  border-radius: 19px;
+  padding: 28px 24px;
+  margin-bottom: 18px;
+  text-align: center;
+}
+.plant-card.is-plant {
+  background: #e8f1e7;
+  color: #194c34;
+  border-color: #c9dfc9;
+}
+
+.plant-card.is-plant .plant-word {
+  color: #194c34;
+}
