@@ -1458,8 +1458,20 @@ button.crop-choice.selected {
 
 .welcome-art {
   background:
-    linear-gradient(rgb(248 248 242 / 15%), rgb(248 248 242 / 15%)),
-    url('./assets/planting.jpg') center / cover no-repeat;
+    linear-gradient(rgb(248 248 242 / 12%), rgb(248 248 242 / 12%)),
+    url('./assets/planting.jpg') center 30% / cover no-repeat;
+  border-radius: 8px;
+  min-height: 420px;
+}
+
+.welcome-art::after {
+  content: "Photo: Ricardo IV Tamayo / Unsplash";
+  position: absolute;
+  right: 14px;
+  bottom: 10px;
+  color: rgb(255 255 255 / 85%);
+  font-size: 11px;
+  letter-spacing: 0.3px;
 }
 
 .welcome-art .sun,
@@ -1485,4 +1497,17 @@ body:has(.welcome-page) .topbar {
 body:has(.welcome-page) .language-button {
   background: #f3ecdc;
   border-color: #e0d5ba;
+}
+
+.welcome-art {
+  border-radius: 0;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 18%);
+  mask-image: linear-gradient(to right, transparent 0%, #000 18%);
+}
+
+@media (max-width: 760px) {
+  .welcome-art {
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 18%);
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 18%);
+  }
 }
