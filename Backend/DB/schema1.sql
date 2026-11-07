@@ -17,7 +17,7 @@ CREATE TABLE false_start (
     region_id INTEGER NOT NULL REFERENCES regions(id) ON DELETE CASCADE,
     season_name VARCHAR(50) NOT NULL,         
     is_false_start BOOLEAN NOT NULL,          
-    confidence DECIMAL(4, 3) NOT NULL,        
+    confidence DECIMAL(5,2) NOT NULL,        
     dry_spell_risk_days INTEGER NOT NULL,     
     cumulative_rain_mm DECIMAL(6, 2) NOT NULL,
     recommendation TEXT NOT NULL, 

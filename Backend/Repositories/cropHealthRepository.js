@@ -15,29 +15,43 @@ export const insertHealthLogQ = async ({
   return rows[0];
 };
 
-// Get readings for each Grid on a FArm
+// Get readings for each Grid on a Farm
 export const readingsForGridsOnFarmQ = async (farm_id) => {
-  const query = `SELECT DISTINCT ON (g.id)
-      g.id AS grid_id,g.grid_code,
+  const query = `
+    SELECT DISTINCT ON (g.id)
+      g.id AS grid_id, g.grid_code,
       g.min_lat, g.max_lat, g.min_lon, g.max_lon,
       chl.temperature, chl.humidity, chl.soil_moisture,
       chl.rainfall, chl.vegetation_coverage, chl.ndvi,
       chl.health_score, chl.status, chl.primary_stress_factor,
       chl.recorded_at
-    FROM grids g  LEFT JOIN crop_health_logs chl ON g.id = chl.grid_id
-    WHERE g.farm_id = $1 ORDER BY g.id, chl.recorded_at DESC; `;
+    FROM grids g
+    LEFT JOIN crop_health_logs chl ON g.id = chl.grid_id
+    WHERE g.farm_id = $1 
+    ORDER BY g.id, chl.recorded_at DESC NULLS LAST;
+  `;
   const { rows } = await pool.query(query, [farm_id]);
-  return rows;};
+  return rows;
+};
 
-//GET DYING GRIDS for alerting Purposes
-export const find_failing_grids_by_farm = async (farm_id) => {
-  const query = `WITH latest_grid_logs AS (
-      SELECT DISTINCT ON (grid_id) * FROM crop_health_logs
-      ORDER BY grid_id, recorded_at DESC)
+// GET DYING GRIDS for alerting purposes (filtered by farm_id inside CTE for scale)
+export const findDyingGridsByFarmQ = async (farm_id) => {
+  const query = `
+    WITH farm_grids AS (
+      SELECT id, grid_code, min_lat, max_lat, min_lon, max_lon 
+      FROM grids 
+      WHERE farm_id = $1
+    ),
+    latest_grid_logs AS (
+      SELECT DISTINCT ON (chl.grid_id) chl.*
+      FROM crop_health_logs chl
+      JOIN farm_grids fg ON chl.grid_id = fg.id
+      ORDER BY chl.grid_id, chl.recorded_at DESC
+    )
     SELECT 
-      g.id AS grid_id,
-      g.grid_code,
-      g.min_lat, g.max_lat, g.min_lon, g.max_lon,
+      fg.id AS grid_id,
+      fg.grid_code,
+      fg.min_lat, fg.max_lat, fg.min_lon, fg.max_lon,
       lgl.health_score,
       lgl.status,
       lgl.primary_stress_factor,
@@ -46,10 +60,11 @@ export const find_failing_grids_by_farm = async (farm_id) => {
       lgl.temperature,
       lgl.rainfall,
       lgl.recorded_at
-    FROM grids g
-    JOIN latest_grid_logs lgl ON g.id = lgl.grid_id
-    WHERE g.farm_id = $1 AND lgl.status = 'FAILING'
-    ORDER BY lgl.health_score ASC;`;
+    FROM farm_grids fg
+    JOIN latest_grid_logs lgl ON fg.id = lgl.grid_id
+    WHERE lgl.status = 'FAILING'
+    ORDER BY lgl.health_score ASC;
+  `;
   const { rows } = await pool.query(query, [farm_id]);
   return rows;
 };
