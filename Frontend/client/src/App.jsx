@@ -1,8 +1,31 @@
 import { useEffect, useState } from 'react'
+import {
+  ArrowRight,
+  Check,
+  Clock3,
+  CloudRain,
+  Coffee,
+  Droplets,
+  Info,
+  Languages,
+  MapPin,
+  Plus,
+  RefreshCw,
+  Search,
+  Sprout,
+  Thermometer,
+  Wheat,
+  Wind,
+} from 'lucide-react'
 import './App.css'
 import PlantOrWait from './components/PlantOrWait'
+import RainChart from './components/RainChart'
+import plantingImage from './assets/planting.jpg'
 
 const API_URL = 'http://localhost:5002/api/mock/crops/1/health'
+const sampleRainfall = [0.2, 0.1, 2.4, 6.1, 3.8, 0.4, 0.1, 0, 0, 0.2, 0, 0.1, 0, 0]
+const sampleDrySpellRisk = 'medium'
+const sampleRainfallReference = 2
 
 const translations = {
   en: {
@@ -17,14 +40,14 @@ const translations = {
     welcomeText:
       'Check the weather, keep track of your crops, and get information to help you decide when to plant.',
     setupFarm: "Let's set up your farm",
-    welcomeNote: 'Simple steps. Clear information. Made with farmers in mind.',
+    howItWorks: 'How it works',
     chooseCrops: 'Choose your crops',
     chooseCropsText: 'Start with the crops growing on your farm.',
     addLocation: 'Add your location',
     addLocationText: 'Help us work toward information relevant to your area.',
     understandReadings: 'Understand your readings',
     understandReadingsText: 'See your available crop information in one place.',
-    growingTogether: 'Growing better, together.',
+    photoCredit: 'Photo: Ricardo IV Tamayo / Unsplash',
 
     locationEyebrow: "LET'S GET TO KNOW YOUR FARM",
     locationTitle: 'Where is your farm?',
@@ -64,7 +87,7 @@ const translations = {
     wheat: 'Wheat',
     wheatText: 'Monitor wheat conditions',
     coffee: 'Coffee',
-    coffeeText: 'Monitor coffee conditions',
+    coffeeSelectionText: 'Monitor coffee conditions',
     teff: 'Teff',
     teffText: "We're planning this for a later version.",
     comingSoon: 'Coming later',
@@ -103,10 +126,6 @@ const translations = {
     loadErrorTitle: "We couldn't load your readings",
     loadErrorText: 'Check that the backend is running, then try again.',
     tryAgain: 'Try again',
-    needHelp: 'Need a hand?',
-    needHelpText:
-      'Visit Help & guidance for more information about this prototype.',
-    learnMore: 'Learn more',
     coffeeEyebrow: 'COFFEE MONITORING',
     coffeeTitle: "Let's connect your coffee data",
     coffeeText:
@@ -144,142 +163,219 @@ const translations = {
     deviceLocationRecorded: 'Device location recorded',
     locationSavedCoordinates: 'Coordinates recorded for this session.',
     unitsNotice: 'Measurement units have not been confirmed.',
+    plantNow: 'Plant now',
+    wait: 'Wait',
+    verdictQuestion: 'What should you do?',
+    sampleData: 'Sample data',
+    rainHistory: 'Last 14 days of rain',
+    rainChartCaption: 'A few rainy days then a dry gap can be a false start.',
+    rainUnit: 'mm of rain',
+    chartDaysAgo: 'Days ago',
+    chartReference: 'Sample planting threshold',
+    highestRainfallDay: 'Highest sample day',
+    dayAgo: 'day ago',
+    daysAgo: 'days ago',
+    outlookHeading: 'Illustrative outlook: next 14 days',
+    drySpellRisk: 'Dry-spell risk',
+    riskMedium: 'Medium',
+    outlookDemoNote: 'Example only. A weather forecast is not connected yet.',
+    riskSelectorHeading: 'How do you want to weigh planting risk?',
+    riskBold: 'Bold',
+    riskBalanced: 'Balanced',
+    riskCareful: 'Careful',
+    riskBoldDescription: 'More willing to plant when the outlook is uncertain.',
+    riskBalancedDescription: 'Balance the chance to plant with the risk of a dry spell.',
+    riskCarefulDescription: 'Wait for stronger signs that the rains will continue.',
+    riskSelectionNote: 'Your choice changes this sample decision only.',
+    boldDecisionReason: 'This example accepts medium dry-spell risk. It is not a forecast or a planting recommendation.',
+    balancedDecisionReason: 'With medium dry-spell risk in this example, a balanced choice is to wait for clearer signs.',
+    carefulDecisionReason: 'With medium dry-spell risk in this example, a careful choice is to wait for stronger signs.',
+    metricDry: 'Dry',
+    metricGood: 'Good',
+    metricWet: 'Wet',
+    metricCool: 'Cool',
+    metricWarm: 'Warm',
+    metricVeryWarm: 'Very warm',
+    metricHumid: 'Humid',
+    metricCalm: 'Calm',
+    metricModerate: 'Moderate',
+    metricStrong: 'Strong',
+    metricLow: 'Low',
+    metricHigh: 'High',
+    sampleReading: 'Sample reading',
   },
 
   am: {
-    farmCompanion: 'የእርሻዎ አጋር',
+    farmCompanion: 'ለእርሻዎ አጋዥ',
     myCrops: 'ሰብሎቼ',
-    help: 'እገዛ እና መመሪያ',
+    help: 'እገዛና መመሪያ',
     switchLanguage: 'English',
 
-    welcomeEyebrow: 'ለተሻለ የእርሻ ውሳኔ',
-    welcomeTitle1: 'መቼ መዝራት ',
-    welcomeTitle2: 'እንዳለብዎት ይወቁ።',
+    welcomeEyebrow: 'ለእርሻዎ የተሻሉ ውሳኔዎች',
+    welcomeTitle1: 'መቼ መዝራት',
+    welcomeTitle2: 'እንደሚገባ ይወቁ።',
     welcomeText:
-      'የአየር ሁኔታን ይከታተሉ፣ ስለ ሰብሎችዎ መረጃ ያግኙ፣ እና መቼ መዝራት እንደሚሻል ለመወሰን የሚረዳዎትን መረጃ ይጠቀሙ።',
+      'የአየር ሁኔታንና የሰብልዎን ሁኔታ ይከታተሉ። መቼ መዝራት እንደሚሻል ለመወሰን የሚረዳዎትን መረጃ ያግኙ።',
     setupFarm: 'እርሻዎን እናዘጋጅ',
-    welcomeNote: 'ቀላል እርምጃዎች። ግልጽ መረጃ። ለገበሬዎች የተዘጋጀ።',
+    howItWorks: 'እንዴት ይሰራል?',
     chooseCrops: 'ሰብሎችዎን ይምረጡ',
-    chooseCropsText: 'በእርሻዎ ላይ ካሉ ሰብሎች ይጀምሩ።',
-    addLocation: 'የእርሻዎን ቦታ ያስገቡ',
-    addLocationText: 'ለአካባቢዎ የሚስማማ መረጃ እንድናዘጋጅ ይረዳናል።',
-    understandReadings: 'የመለኪያ ውጤቶችን ይረዱ',
+    chooseCropsText: 'በእርሻዎ ላይ የሚያመርቷቸውን ሰብሎች ይምረጡ።',
+    addLocation: 'የእርሻዎን አካባቢ ያስገቡ',
+    addLocationText: 'ለአካባቢዎ የሚስማማ መረጃ እንድናቀርብ ይረዳናል።',
+    understandReadings: 'የሰብልዎን መረጃ ይረዱ',
     understandReadingsText: 'ስለ ሰብሎችዎ ያለውን መረጃ በአንድ ቦታ ይመልከቱ።',
-    growingTogether: 'አብረን የተሻለ እናድግ።',
+    photoCredit: 'ፎቶ፦ Ricardo IV Tamayo / Unsplash',
 
-    locationEyebrow: 'ስለ እርሻዎ እንወቅ',
+    locationEyebrow: 'ስለ እርሻዎ ጥቂት እንወቅ',
     locationTitle: 'እርሻዎ የት ይገኛል?',
     locationText:
-      'ይህ ለአካባቢዎ የሚስማማ የሰብል እና የአየር ሁኔታ መረጃ ለማዘጋጀት ይረዳል። ይህን መረጃ በኋላ መቀየር ይችላሉ።',
+      'የእርሻዎን አካባቢ ማወቅ ለአካባቢዎ የሚስማማ የሰብልና የአየር ሁኔታ መረጃ ለማቅረብ ይረዳናል። ይህን መረጃ በኋላ መቀየር ይችላሉ።',
     region: 'ክልል',
     zone: 'ዞን',
     woreda: 'ወረዳ',
     village: 'ቀበሌ ወይም መንደር',
-    optional: '(አስፈላጊ አይደለም)',
-    regionHint: 'ለምሳሌ፦ ኦሮሚያ',
-    zoneHint: 'የዞን ስም ያስገቡ',
-    woredaHint: 'የወረዳ ስም ያስገቡ',
-    villageHint: 'የቀበሌ ወይም የመንደር ስም ያስገቡ',
-    atFarm: 'አሁን እርሻ ላይ ነዎት?',
+    optional: '(አማራጭ)',
+    regionHint: 'ለምሳሌ፣ ኦሮሚያ',
+    zoneHint: 'ዞኑን ያስገቡ',
+    woredaHint: 'ወረዳውን ያስገቡ',
+    villageHint: 'ቀበሌውን ወይም መንደሩን ያስገቡ',
+    atFarm: 'አሁን በእርሻዎ ላይ ነዎት?',
     atFarmText:
-      'ከፈለጉ የስልክዎን የአካባቢ መረጃ መጠቀም ይችላሉ። እርሻው ላይ ከሆኑ ብቻ ይጠቀሙት።',
-    useLocation: 'የአሁኑን ቦታ ይጠቀሙ',
+      'በእርሻዎ ላይ ከሆኑ፣ የስልክዎን የአካባቢ መረጃ መጠቀም ይችላሉ።',
+    useLocation: 'የአሁኑን አካባቢ ይጠቀሙ',
     coordinatesCaptured:
-      'የአካባቢ መጋጠሚያዎች ለዚህ ጊዜያዊ ክፍለ ጊዜ ተመዝግበዋል። ገና ወደ ባክኤንድ አልተላኩም።',
+      'የአካባቢ መረጃው ለዚህ ጊዜያዊ ክፍለ ጊዜ ተመዝግቧል፤ ወደ ስርዓቱ አልተላከም።',
     locationUnavailable:
-      'በዚህ አሳሽ የአካባቢ መለየት አይገኝም። የእርሻዎን ቦታ በእጅ ማስገባት ይችላሉ።',
+      'በዚህ አሳሽ የስልክ አካባቢን ማወቅ አልተቻለም። የእርሻዎን አካባቢ በእጅ ማስገባት ይችላሉ።',
     locationDenied:
-      'የአካባቢ መረጃዎን ማግኘት አልቻልንም። የእርሻዎን ቦታ በእጅ ማስገባት ይችላሉ።',
+      'የስልክዎን አካባቢ ማግኘት አልቻልንም። የእርሻዎን አካባቢ በእጅ ማስገባት ይችላሉ።',
     locationRequired:
-      'እባክዎ ቢያንስ ክልል እና ወረዳ ያስገቡ ወይም የስልክዎን አካባቢ ይጠቀሙ።',
+      'እባክዎ ክልልና ወረዳ ያስገቡ፣ ወይም የስልክዎን አካባቢ ይጠቀሙ።',
     locationPrivacy:
-      'በዚህ የሙከራ ስሪት የአካባቢ መረጃው በአሁኑ ገጽ ውስጥ ብቻ ይቆያል። ወደ ባክኤንድ አይላክም እና በመለያ ውስጥ አይቀመጥም።',
+      'ይህ የሙከራ ስሪት ነው። የአካባቢ መረጃዎ በዚህ ገጽ ላይ ብቻ ይቆያል፤ ወደ ስርዓቱ አይላክም እና በመለያዎ ውስጥ አይቀመጥም።',
     continueCrops: 'ወደ ሰብሎች ይቀጥሉ',
-    back: 'ተመለስ',
-    stepLocation: 'የእርሻ ቦታ',
+    back: 'ወደ ኋላ',
+    stepLocation: 'የእርሻ አካባቢ',
     stepCrops: 'ሰብሎችን ይምረጡ',
 
-    cropsEyebrow: 'ደረጃ 2 · እርሻዎ',
+    cropsEyebrow: 'ደረጃ 2 · ስለ እርሻዎ',
     cropsTitle: 'ምን ሰብሎች ያመርታሉ?',
     cropsText: 'የሚያመርቷቸውን ሰብሎች ሁሉ ይምረጡ። ከአንድ በላይ መምረጥ ይችላሉ።',
     wheat: 'ስንዴ',
-    wheatText: 'የስንዴ ሁኔታን ይከታተሉ',
+    wheatText: 'የስንዴዎን ሁኔታ ይከታተሉ',
     coffee: 'ቡና',
-    coffeeText: 'የቡና ሁኔታን ይከታተሉ',
+    coffeeSelectionText: 'የቡናዎን ሁኔታ ይከታተሉ',
     teff: 'ጤፍ',
-    teffText: 'ይህን በሚቀጥለው ስሪት ለማካተት እየተዘጋጀን ነው።',
-    comingSoon: 'በኋላ ይጨመራል',
-    yourLocation: 'የእርሻዎ ቦታ',
-    edit: 'ይቀይሩ',
+    teffText: 'ጤፍን በኋላ እናካትታለን።',
+    comingSoon: 'በቅርቡ',
+    yourLocation: 'የእርሻዎ አካባቢ',
+    edit: 'ያስተካክሉ',
     viewCrops: 'ሰብሎቼን ይመልከቱ',
 
-    dashboardEyebrow: 'የእርሻዎ አጠቃላይ ሁኔታ',
-    helloFarmer: 'ሰላም ገበሬ!',
-    editLocation: 'ቦታን ይቀይሩ',
-    monitoring: 'አሁን የሚከታተሉት',
-    readingsIntro: 'ለዚህ ሰብል አሁን የሚገኘው መረጃ ይህ ነው።',
-    checkingStatus: 'ሁኔታውን በማረጋገጥ ላይ',
-    needsAttention: 'ትኩረት ያስፈልጋል',
-    checkConditions: 'ሁኔታውን ይፈትሹ',
+    dashboardEyebrow: 'የእርሻዎ አጠቃላይ እይታ',
+    helloFarmer: 'እንኳን ደህና መጡ!',
+    editLocation: 'አካባቢውን ያስተካክሉ',
+    monitoring: 'እየተከታተልን ያለነው',
+    readingsIntro: 'ለዚህ ሰብል ያለን የቅርብ ጊዜ መረጃ እነሆ።',
+    checkingStatus: 'ሁኔታውን እያረጋገጥን ነው',
+    needsAttention: 'ተጨማሪ ትኩረት ያስፈልጋል',
+    checkConditions: 'ሁኔታውን ይመርምሩ',
     reportedHealthy: 'ጥሩ ሁኔታ መሆኑ ተገልጿል',
-    statusUnknown: 'ሁኔታው አልተረጋገጠም',
-    wheatReadings: 'የሰብል መለኪያዎች',
-    readingsText: 'በአሁኑ ባክኤንድ የተላኩ ውጤቶች።',
-    refresh: 'አድስ',
-    refreshing: 'በማደስ ላይ...',
+    statusUnknown: 'ሁኔታው አልታወቀም',
+    wheatReadings: 'የሰብል መረጃ',
+    readingsText: 'ከአሁኑ የመረጃ ምንጭ የተገኘ ውጤት።',
+    refresh: 'እንደገና ያድሱ',
+    refreshing: 'በማደስ ላይ…',
     soilMoisture: 'የአፈር እርጥበት',
     temperature: 'የሙቀት መጠን',
     humidity: 'የአየር እርጥበት',
     windSpeed: 'የነፋስ ፍጥነት',
     rainfall: 'የዝናብ መጠን',
-    lastUpdated: 'መጨረሻ የተዘመነው፦',
+    lastUpdated: 'የመጨረሻ የዝማኔ ጊዜ፦',
     sampleNote:
-      'እነዚህ የሙከራ የኤፒአይ ውጤቶች ናቸው። የመለኪያ አሃዶችና ለእያንዳንዱ ሰብል የሚስማሙ ገደቦች ገና መረጋገጥ አለባቸው።',
-    criticalTitle: 'ይህ ውጤት በተጨማሪ መፈተሽ አለበት',
+      'እነዚህ የሙከራ መረጃዎች ናቸው። የመለኪያ አሃዶቹና ለሰብሎቹ የሚስማሙ ገደቦች ገና አልተረጋገጡም።',
+    criticalTitle: 'ይህ ውጤት ተጨማሪ ማረጋገጫ ይፈልጋል',
     criticalText:
-      'የሙከራው ኤፒአይ ወሳኝ ሁኔታ መኖሩን ያሳያል። ይህ የሙከራ መረጃ ስለሆነና የመለኪያ አሃዶችና ገደቦች ስላልተረጋገጡ፣ የእርሻ ውሳኔ ከመወሰንዎ በፊት መረጃውን ያረጋግጡ።',
-    loadingTitle: 'የሰብል መረጃዎን በማግኘት ላይ',
-    loadingText: 'ኔቡላ የሚገኘውን የቅርብ ጊዜ መረጃ እስኪጠይቅ ይጠብቁ።',
-    loadErrorTitle: 'የመለኪያ ውጤቶቹን ማግኘት አልቻልንም',
-    loadErrorText: 'ባክኤንዱ እየሠራ መሆኑን ያረጋግጡና እንደገና ይሞክሩ።',
+      'የሙከራ መረጃው ሰብሉ አሳሳቢ ሁኔታ ላይ እንዳለ ያሳያል። ሆኖም ይህ መረጃ የሙከራ ስለሆነና አሃዶቹና ገደቦቹ ስላልተረጋገጡ፣ በእርሻ ላይ ውሳኔ ከመወሰንዎ በፊት ውጤቱን ያረጋግጡ።',
+    loadingTitle: 'የሰብልዎን መረጃ እያመጣን ነው',
+    loadingText: 'የሚገኘውን የቅርብ ጊዜ መረጃ እስክናመጣ ይጠብቁ።',
+    loadErrorTitle: 'የሰብልዎን መረጃ ማግኘት አልቻልንም',
+    loadErrorText: 'የመረጃ ምንጩ እየሠራ መሆኑን ያረጋግጡና እንደገና ይሞክሩ።',
     tryAgain: 'እንደገና ይሞክሩ',
-    needHelp: 'እገዛ ይፈልጋሉ?',
-    needHelpText: 'ስለዚህ የሙከራ ስሪት ተጨማሪ መረጃ በእገዛ እና መመሪያ ውስጥ ያግኙ።',
-    learnMore: 'ተጨማሪ ይወቁ',
     coffeeEyebrow: 'የቡና ክትትል',
-    coffeeTitle: 'የቡና መረጃዎን እናገናኝ',
+    coffeeTitle: 'የቡና መረጃን እናገናኝ',
     coffeeText:
-      'በዚህ የሙከራ ስሪት ቡናን መምረጥ ይቻላል፣ ነገር ግን ባክኤንዱ በአሁኑ ጊዜ የስንዴ የሙከራ መረጃ ብቻ ይሰጣል። የቡና መለኪያዎችን አልፈጠርንም ወይም አላሳየንም።',
+      'በዚህ የሙከራ ስሪት ቡናን መምረጥ ይቻላል፤ ነገር ግን አሁን የስንዴ የሙከራ መረጃ ብቻ ይቀርባል። ስለዚህ የቡና መለኪያዎች አልታዩም።',
     seeNext: 'ቀጣዩን ይመልከቱ',
-    prototype: 'የመጀመሪያ የሙከራ ስሪት',
+    prototype: 'የሙከራ ስሪት',
 
-    guidanceEyebrow: 'ለመርዳት እዚህ ነን',
-    guidanceTitle: 'እገዛ እና መመሪያ',
-    guidanceIntro: 'ግልጽ መረጃ ስለ እርሻዎ የተሻለ ውሳኔ ለመወሰን ይረዳል።',
-    checkWheat: 'የስንዴ መለኪያዎችን ይፈትሹ',
-    wheatGuidance: 'የአሁኑ የሙከራ ኤፒአይ የሚያሳየው ሁኔታ፦',
+    guidanceEyebrow: 'እገዛ ያስፈልግዎታል?',
+    guidanceTitle: 'እገዛና መመሪያ',
+    guidanceIntro: 'ግልጽ መረጃ ስለ እርሻዎ የተሻለ ውሳኔ እንዲወስኑ ይረዳዎታል።',
+    checkWheat: 'የስንዴዎን መረጃ ይመልከቱ',
+    wheatGuidance: 'የሙከራ መረጃው የሚያሳየው ሁኔታ፦',
     wheatGuidance2:
-      'እነዚህ የሙከራ ውጤቶች ናቸው። አሃዶቻቸውና ሁኔታውን ለመወሰን የተጠቀሙት ደንቦች ገና አልተረጋገጡም።',
+      'እነዚህ የሙከራ ውጤቶች ናቸው። የመለኪያ አሃዶቹና ሁኔታውን ለመወሰን የተጠቀሙት መመዘኛዎች ገና አልተረጋገጡም።',
     wheatGuidance3:
-      'እርምጃ ከመውሰድዎ በፊት መለኪያዎቹን ያረጋግጡ። ስለ ሰብልዎ ካሳሰበዎት የአካባቢውን የግብርና ባለሙያ ያማክሩ።',
-    guidanceNotReady: 'ለዚህ ሰብል የተለየ መመሪያ ገና እየተዘጋጀ ነው',
+      'ምንም እርምጃ ከመውሰድዎ በፊት መለኪያዎቹን ያረጋግጡ። ስለ ሰብልዎ ካሳሰበዎት በአካባቢዎ ያለ የግብርና ባለሙያን ያማክሩ።',
+    guidanceNotReady: 'ለዚህ ሰብል የተለየ መመሪያ ገና የለም',
     guidanceNotReadyText:
-      'ይህ የሙከራ ስሪት ለዚህ ሰብል የተረጋገጡ መለኪያዎችና ምክሮች ገና የሉትም። ተገቢው መረጃ ሲገኝ እንጨምራቸዋለን።',
-    howNebulaHelps: 'ኔቡላ እንዴት ይረዳል?',
-    understandNumbers: 'ቁጥሮቹን ይረዱ',
+      'ለዚህ ሰብል የተረጋገጠ መረጃና ምክር በዚህ የሙከራ ስሪት ውስጥ ገና የለም። ተገቢው መረጃ ሲገኝ እናክላለን።',
+    howNebulaHelps: 'ኔቡላ እንዴት ሊረዳዎት ይችላል?',
+    understandNumbers: 'የመለኪያ ውጤቶችን ይረዱ',
     understandNumbersText:
-      'የመለኪያዎቹ አሃድና ትርጉም ሲረጋገጥ በቀላል ቋንቋ እናብራራቸዋለን።',
-    localConditions: 'የአካባቢዎን ሁኔታ ይወቁ',
+      'የመለኪያዎቹ አሃድና ትርጉም ሲረጋገጥ፣ ውጤቶቹን በቀላል ቋንቋ እናብራራለን።',
+    localConditions: 'የአካባቢዎን ሁኔታ ይከታተሉ',
     localConditionsText:
-      'ተገቢ የመረጃ ምንጭ ሲገናኝ ከቦታዎ ጋር የተያያዘ የአየር ሁኔታ መረጃ ማከል ይቻላል።',
-    askForHelp: 'እገዛ መቼ እንደሚጠይቁ ይወቁ',
+      'ተገቢ የመረጃ ምንጭ ሲገናኝ፣ ለአካባቢዎ የአየር ሁኔታ መረጃ ማቅረብ ይቻላል።',
+    askForHelp: 'መቼ እገዛ መጠየቅ እንዳለብዎ ይወቁ',
     askForHelpText:
-      'መለኪያዎች ግልጽ ካልሆኑ ወይም አሳሳቢ ከሆኑ፣ የሚታመን የአካባቢ የግብርና ባለሙያ ያማክሩ።',
-    backToCrops: 'ወደ ሰብሎቼ ተመለስ',
-    noLocation: 'የእርሻ ቦታ አልተጨመረም',
+      'መለኪያዎቹ ግልጽ ካልሆኑ ወይም አሳሳቢ ከሆኑ፣ በአካባቢዎ ያለ የግብርና ባለሙያን ያማክሩ።',
+    backToCrops: 'ወደ ሰብሎቼ ይመለሱ',
+    noLocation: 'የእርሻ አካባቢ አልተገለጸም',
     deviceLocationRecorded: 'የስልክ አካባቢ ተመዝግቧል',
-    locationSavedCoordinates: 'መጋጠሚያዎች ለዚህ ጊዜያዊ ክፍለ ጊዜ ተመዝግበዋል።',
-    unitsNotice: 'የመለኪያ አሃዶች ገና አልተረጋገጡም።',
+    locationSavedCoordinates: 'የአካባቢ መረጃው ለዚህ ክፍለ ጊዜ ተመዝግቧል።',
+    unitsNotice: 'የመለኪያ አሃዶቹ ገና አልተረጋገጡም።',
+    plantNow: 'አሁን ይዝሩ',
+    wait: 'ይጠብቁ',
+    verdictQuestion: 'ምን ማድረግ ይሻላል?',
+    sampleData: 'የምሳሌ መረጃ',
+    rainHistory: 'ባለፉት 14 ቀናት የዝናብ መጠን',
+    rainChartCaption: 'ዝናቡ ጥቂት ቀን ከጣለ በኋላ ደረቅ ጊዜ ከመጣ፣ የዝናብ ወቅቱ በትክክል መጀመሩን ያረጋግጡ።',
+    rainUnit: 'ዝናብ (ሚሜ)',
+    chartDaysAgo: 'ቀናት በፊት',
+    chartReference: 'የምሳሌ የመዝራት መነሻ መጠን',
+    dayAgo: 'ቀን በፊት',
+    daysAgo: 'ቀናት በፊት',
+    outlookHeading: 'የምሳሌ የሚቀጥሉት 14 ቀናት ግምት',
+    drySpellRisk: 'የደረቅ ጊዜ ዕድል',
+    riskMedium: 'መካከለኛ',
+    outlookDemoNote: 'ይህ ለማሳያ የቀረበ ምሳሌ ነው፤ እስካሁን የአየር ሁኔታ ትንበያ አልተገናኘም።',
+    riskSelectorHeading: 'የመዝራት ውሳኔዎን ሲወስኑ አደጋን ምን ያህል ይቀበላሉ?',
+    riskBold: 'ደፋር',
+    riskBalanced: 'ሚዛናዊ',
+    riskCareful: 'ጥንቃቄ ያለው',
+    riskBoldDescription: 'ትንበያው እርግጠኛ ባይሆንም ለመዝራት ዝግጁ ነዎት።',
+    riskBalancedDescription: 'የመዝራት ዕድልንና የደረቅ ጊዜ ስጋትን ያመዛዝኑ።',
+    riskCarefulDescription: 'ዝናቡ እንደሚቀጥል ግልጽ ምልክት እስኪያዩ ይጠብቁ።',
+    riskSelectionNote: 'ምርጫዎ በዚህ ምሳሌ ላይ ያለውን ውሳኔ ብቻ ይቀይራል።',
+    boldDecisionReason: 'በዚህ ምሳሌ የደረቅ ጊዜ ዕድሉ መካከለኛ ቢሆንም መዝራት ተመርጧል። ይህ ትንበያም ሆነ የመዝራት ምክር አይደለም።',
+    balancedDecisionReason: 'በዚህ ምሳሌ የደረቅ ጊዜ ዕድሉ መካከለኛ ነው። ተጨማሪ ግልጽ ምልክት እስኪታይ መጠበቅ ይሻላል።',
+    carefulDecisionReason: 'በዚህ ምሳሌ የደረቅ ጊዜ ዕድሉ መካከለኛ ነው። ዝናቡ እንደሚቀጥል ጠንካራ ማስረጃ እስኪታይ መጠበቅ ይሻላል።',
+    metricDry: 'ደረቅ',
+    metricGood: 'ጥሩ',
+    metricWet: 'እርጥብ',
+    metricCool: 'ቀዝቃዛ',
+    metricWarm: 'ሞቃት',
+    metricVeryWarm: 'በጣም ሞቃት',
+    metricHumid: 'እርጥበት ያለው',
+    metricCalm: 'ረጋ ያለ',
+    metricModerate: 'መካከለኛ',
+    metricStrong: 'ከፍተኛ',
+    metricLow: 'ዝቅተኛ',
+    metricHigh: 'ከፍተኛ',
+    sampleReading: 'የምሳሌ መለኪያ',
+    highestRainfallDay: 'በምሳሌው ከፍተኛ ዝናብ የዘነበበት ቀን',
   },
 }
 
@@ -295,6 +391,7 @@ function toggleLanguage() {
   const t = translations[language]
 
   const [page, setPage] = useState('welcome')
+  const [riskPreference, setRiskPreference] = useState('balanced')
   const [farmLocation, setFarmLocation] = useState({
     region: '',
     zone: '',
@@ -311,14 +408,7 @@ function toggleLanguage() {
   const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
-    if (page !== 'dashboard') return
-
-    if (activeCrop !== 'Wheat') {
-      setCrop(null)
-      setError(false)
-      setLoading(false)
-      return
-    }
+    if (page !== 'dashboard' || activeCrop !== 'Wheat') return
 
     let cancelled = false
 
@@ -396,18 +486,27 @@ function toggleLanguage() {
   }
 
   function toggleCrop(name) {
-    setSelectedCrops((previous) => {
-      if (previous.includes(name)) {
-        if (previous.length === 1) return previous
+    const isSelected = selectedCrops.includes(name)
 
-        const next = previous.filter((item) => item !== name)
-        if (activeCrop === name) setActiveCrop(next[0])
-        return next
+    if (isSelected) {
+      if (selectedCrops.length === 1) return
+
+      const next = selectedCrops.filter((item) => item !== name)
+      if (activeCrop === name) setActiveCrop(next[0])
+      setSelectedCrops(next)
+      if (activeCrop === name || activeCrop !== 'Wheat') {
+        setCrop(null)
+        setError(false)
+        setLoading(false)
       }
+      return
+    }
 
-      setActiveCrop(name)
-      return [...previous, name]
-    })
+    setSelectedCrops((previous) => [...previous, name])
+    setActiveCrop(name)
+    setCrop(null)
+    setError(false)
+    setLoading(false)
   }
 
   function openDashboard() {
@@ -447,15 +546,44 @@ function toggleLanguage() {
 
   const metrics = crop
     ? [
-        { label: t.soilMoisture, value: crop.metrics?.soilMoisture, icon: '💧' },
-        { label: t.temperature, value: crop.metrics?.temprature, icon: '🌡️' },
-        { label: t.humidity, value: crop.metrics?.humidity, icon: '☁️' },
-        { label: t.windSpeed, value: crop.metrics?.windSpeed, icon: '💨' },
-        { label: t.rainfall, value: crop.metrics?.rainFall, icon: '🌧️' },
+        { label: t.soilMoisture, value: crop.metrics?.soilMoisture, scale: 100, levels: [[30, 'metricDry'], [70, 'metricGood'], [Infinity, 'metricWet']], icon: <Droplets size={23} aria-hidden="true" /> },
+        { label: t.temperature, value: crop.metrics?.temprature, scale: 60, levels: [[15, 'metricCool'], [30, 'metricGood'], [40, 'metricWarm'], [Infinity, 'metricVeryWarm']], icon: <Thermometer size={23} aria-hidden="true" /> },
+        { label: t.humidity, value: crop.metrics?.humidity, scale: 100, levels: [[30, 'metricDry'], [70, 'metricGood'], [Infinity, 'metricHumid']], icon: <CloudRain size={23} aria-hidden="true" /> },
+        { label: t.windSpeed, value: crop.metrics?.windSpeed, scale: 60, levels: [[10, 'metricCalm'], [30, 'metricModerate'], [Infinity, 'metricStrong']], icon: <Wind size={23} aria-hidden="true" /> },
+        { label: t.rainfall, value: crop.metrics?.rainFall, scale: 20, levels: [[2, 'metricLow'], [10, 'metricModerate'], [Infinity, 'metricHigh']], icon: <CloudRain size={23} aria-hidden="true" /> },
       ]
     : []
 
+  function getMetricInterpretation(metric) {
+    if (metric.value === null || metric.value === undefined || metric.value === '') {
+      return { label: t.statusUnknown, progress: 0 }
+    }
+
+    const value = Number(metric.value)
+    if (!Number.isFinite(value)) {
+      return { label: t.statusUnknown, progress: 0 }
+    }
+
+    const level = metric.levels.find(([threshold]) => value <= threshold)
+    return {
+      label: level ? t[level[1]] : t.statusUnknown,
+      progress: Math.min(100, Math.max(0, (value / metric.scale) * 100)),
+    }
+  }
+
   const dateLocale = language === 'am' ? 'am-ET' : 'en-US'
+  const sampleDecision =
+    riskPreference === 'bold' && sampleDrySpellRisk === 'medium' ? 'PLANT' : 'WAIT'
+  const decisionReason = {
+    bold: t.boldDecisionReason,
+    balanced: t.balancedDecisionReason,
+    careful: t.carefulDecisionReason,
+  }[riskPreference]
+  const riskOptions = [
+    { value: 'bold', label: t.riskBold, description: t.riskBoldDescription },
+    { value: 'balanced', label: t.riskBalanced, description: t.riskBalancedDescription },
+    { value: 'careful', label: t.riskCareful, description: t.riskCarefulDescription },
+  ]
 
   return (
     <div className="app-shell" lang={language === 'am' ? 'am' : 'en'}>
@@ -479,12 +607,14 @@ function toggleLanguage() {
                 className={page === 'dashboard' ? 'nav-link active' : 'nav-link'}
                 onClick={() => setPage('dashboard')}
               >
+                <Wheat className="nav-icon" size={19} aria-hidden="true" />
                 {t.myCrops}
               </button>
               <button
                 className={page === 'guidance' ? 'nav-link active' : 'nav-link'}
                 onClick={() => setPage('guidance')}
               >
+                <Info className="nav-icon" size={19} aria-hidden="true" />
                 {t.help}
               </button>
             </nav>
@@ -495,7 +625,7 @@ function toggleLanguage() {
             onClick={toggleLanguage}
             aria-label={language === 'en' ? 'Switch to Amharic' : 'ወደ እንግሊዝኛ ቀይር'}
           >
-            <span aria-hidden="true">🌐</span>
+            <Languages className="language-icon" size={19} aria-hidden="true" />
             {t.switchLanguage}
           </button>
         </div>
@@ -504,53 +634,59 @@ function toggleLanguage() {
       <main className="main-content">
         {page === 'welcome' && (
           <section className="welcome-page">
-            <div className="welcome-copy">
-              <p className="eyebrow">{t.welcomeEyebrow}</p>
-              <h1>
-                {t.welcomeTitle1}
-                <br />
-                <span>{t.welcomeTitle2}</span>
-              </h1>
-              <p className="lead">{t.welcomeText}</p>
-              <button
-                className="primary-button large-button"
-                onClick={() => setPage('location')}
-              >
-                {t.setupFarm} <span aria-hidden="true">→</span>
-              </button>
-              <p className="small-note">{t.welcomeNote}</p>
-            </div>
-
-            <div className="welcome-art" aria-hidden="true">
-              <div className="sun"></div>
-              <div className="hill hill-back"></div>
-              <div className="hill hill-front"></div>
-              <div className="field-lines"></div>
-              <div className="plant plant-one">✳</div>
-              <div className="plant plant-two">✳</div>
-              <div className="welcome-art-label">
-                <span>🌱</span>
-                <span>{t.growingTogether}</span>
+            <div
+              className="welcome-hero"
+              style={{
+                backgroundImage: `linear-gradient(180deg, rgb(11 11 12 / 0%) 16%, rgb(11 11 12 / 24%) 46%, rgb(11 11 12 / 88%) 100%), url("${plantingImage}")`,
+              }}
+            >
+              <div className="welcome-copy">
+                <p className="eyebrow">{t.welcomeEyebrow}</p>
+                <h1>
+                  {t.welcomeTitle1}
+                  <br />
+                  <span>{t.welcomeTitle2}</span>
+                </h1>
+                <p className="lead">{t.welcomeText}</p>
+                <button
+                  className="primary-button large-button"
+                  onClick={() => setPage('location')}
+                >
+                  {t.setupFarm}
+                  <ArrowRight size={20} aria-hidden="true" />
+                </button>
               </div>
             </div>
+            <p className="hero-photo-credit">{t.photoCredit}</p>
 
-            <div className="welcome-benefits">
-              <article>
-                <span className="benefit-icon">🌾</span>
-                <h3>{t.chooseCrops}</h3>
-                <p>{t.chooseCropsText}</p>
-              </article>
-              <article>
-                <span className="benefit-icon">📍</span>
-                <h3>{t.addLocation}</h3>
-                <p>{t.addLocationText}</p>
-              </article>
-              <article>
-                <span className="benefit-icon">💚</span>
-                <h3>{t.understandReadings}</h3>
-                <p>{t.understandReadingsText}</p>
-              </article>
-            </div>
+            <section className="welcome-process" aria-labelledby="welcome-process-title">
+              <div className="welcome-process-heading">
+                <h2 id="welcome-process-title">{t.howItWorks}</h2>
+              </div>
+              <div className="welcome-benefits">
+                <article>
+                  <span className="process-step" aria-hidden="true">1</span>
+                  <h3>{t.addLocation}</h3>
+                  <p>{t.addLocationText}</p>
+                </article>
+                <span className="process-connector" aria-hidden="true">
+                  <ArrowRight size={28} />
+                </span>
+                <article>
+                  <span className="process-step" aria-hidden="true">2</span>
+                  <h3>{t.chooseCrops}</h3>
+                  <p>{t.chooseCropsText}</p>
+                </article>
+                <span className="process-connector" aria-hidden="true">
+                  <ArrowRight size={28} />
+                </span>
+                <article>
+                  <span className="process-step" aria-hidden="true">3</span>
+                  <h3>{t.understandReadings}</h3>
+                  <p>{t.understandReadingsText}</p>
+                </article>
+              </div>
+            </section>
           </section>
         )}
 
@@ -609,7 +745,7 @@ function toggleLanguage() {
               </div>
 
               <div className="location-option">
-                <div className="location-option-icon">📍</div>
+                <div className="location-option-icon"><MapPin size={24} aria-hidden="true" /></div>
                 <div className="location-option-copy">
                   <strong>{t.atFarm}</strong>
                   <p>{t.atFarmText}</p>
@@ -643,7 +779,7 @@ function toggleLanguage() {
                   {t.back}
                 </button>
                 <button className="primary-button" type="submit">
-                  {t.continueCrops} <span aria-hidden="true">→</span>
+                  {t.continueCrops} <ArrowRight size={20} aria-hidden="true" />
                 </button>
               </div>
             </form>
@@ -659,7 +795,7 @@ function toggleLanguage() {
             </div>
 
             <div className="step-track">
-              <span className="step done">✓</span>
+              <span className="step done"><Check size={18} aria-hidden="true" /></span>
               <span className="step-line done-line"></span>
               <span className="step done">2</span>
               <span className="step-line"></span>
@@ -672,13 +808,15 @@ function toggleLanguage() {
                 onClick={() => toggleCrop('Wheat')}
                 aria-pressed={selectedCrops.includes('Wheat')}
               >
-                <span className="crop-picture wheat-picture">🌾</span>
+                <span className="crop-picture wheat-picture"><Wheat size={28} aria-hidden="true" /></span>
                 <span className="crop-choice-text">
                   <strong>{t.wheat}</strong>
                   <span>{t.wheatText}</span>
                 </span>
                 <span className="selection-indicator">
-                  {selectedCrops.includes('Wheat') ? '✓' : '+'}
+                  {selectedCrops.includes('Wheat')
+                    ? <Check size={18} aria-hidden="true" />
+                    : <Plus size={18} aria-hidden="true" />}
                 </span>
               </button>
 
@@ -687,18 +825,20 @@ function toggleLanguage() {
                 onClick={() => toggleCrop('Coffee')}
                 aria-pressed={selectedCrops.includes('Coffee')}
               >
-                <span className="crop-picture coffee-picture">☕</span>
+                <span className="crop-picture coffee-picture"><Coffee size={28} aria-hidden="true" /></span>
                 <span className="crop-choice-text">
                   <strong>{t.coffee}</strong>
-                  <span>{t.coffeeText}</span>
+                  <span>{t.coffeeSelectionText}</span>
                 </span>
                 <span className="selection-indicator">
-                  {selectedCrops.includes('Coffee') ? '✓' : '+'}
+                  {selectedCrops.includes('Coffee')
+                    ? <Check size={18} aria-hidden="true" />
+                    : <Plus size={18} aria-hidden="true" />}
                 </span>
               </button>
 
               <div className="crop-choice unavailable">
-                <span className="crop-picture teff-picture">🌱</span>
+                <span className="crop-picture teff-picture"><Sprout size={28} aria-hidden="true" /></span>
                 <span className="crop-choice-text">
                   <strong>{t.teff}</strong>
                   <span>{t.teffText}</span>
@@ -708,7 +848,7 @@ function toggleLanguage() {
             </div>
 
             <div className="farm-summary">
-              <span>📍</span>
+              <span className="icon-tile"><MapPin size={22} aria-hidden="true" /></span>
               <div>
                 <strong>{t.yourLocation}</strong>
                 <p>{locationSummary}</p>
@@ -723,7 +863,7 @@ function toggleLanguage() {
                 {t.back}
               </button>
               <button className="primary-button" onClick={openDashboard}>
-                {t.viewCrops} <span aria-hidden="true">→</span>
+                {t.viewCrops} <ArrowRight size={20} aria-hidden="true" />
               </button>
             </div>
           </section>
@@ -734,8 +874,8 @@ function toggleLanguage() {
             <div className="dashboard-heading">
               <div>
                 <p className="eyebrow">{t.dashboardEyebrow}</p>
-                <h1>{t.helloFarmer} <span aria-hidden="true">🌱</span></h1>
-                <p className="location-line">📍 {locationSummary}</p>
+                <h1>{t.helloFarmer} <Sprout size={28} aria-hidden="true" /></h1>
+                <p className="location-line"><MapPin size={18} aria-hidden="true" /> {locationSummary}</p>
               </div>
               <button className="secondary-button" onClick={() => setPage('location')}>
                 {t.editLocation}
@@ -749,12 +889,74 @@ function toggleLanguage() {
                   className={activeCrop === name ? 'crop-tab active' : 'crop-tab'}
                   onClick={() => setActiveCrop(name)}
                 >
-                  {name === 'Wheat' ? '🌾' : '☕'} {name === 'Wheat' ? t.wheat : t.coffee}
+                  {name === 'Wheat'
+                    ? <Wheat size={18} aria-hidden="true" />
+                    : <Coffee size={18} aria-hidden="true" />}
+                  {name === 'Wheat' ? t.wheat : t.coffee}
                 </button>
               ))}
             </div>
 
-            <PlantOrWait decision="PLANT" reason="Rain is steady. Good time to plant." />
+            <section className="decision-controls" aria-labelledby="outlook-title">
+              <div className="outlook-summary">
+                <div>
+                  <h2 id="outlook-title">{t.outlookHeading}</h2>
+                  <p className="outlook-risk">
+                    <span>{t.drySpellRisk}</span>
+                    <strong>{t.riskMedium}</strong>
+                  </p>
+                  <p className="outlook-note">{t.outlookDemoNote}</p>
+                </div>
+                <span className="icon-tile" aria-hidden="true">
+                  <CloudRain size={24} />
+                </span>
+              </div>
+              <div className="risk-control">
+                <h3>{t.riskSelectorHeading}</h3>
+                <div className="risk-options" role="group" aria-label={t.riskSelectorHeading}>
+                  {riskOptions.map((option) => (
+                    <button
+                      className={riskPreference === option.value ? 'risk-option selected' : 'risk-option'}
+                      key={option.value}
+                      type="button"
+                      aria-pressed={riskPreference === option.value}
+                      onClick={() => setRiskPreference(option.value)}
+                    >
+                      <span className="risk-option-label">{option.label}</span>
+                      <span className="risk-option-description">{option.description}</span>
+                    </button>
+                  ))}
+                </div>
+                <p className="risk-selection-note">{t.riskSelectionNote}</p>
+              </div>
+            </section>
+
+            {/* TODO: Replace the sample risk and decision with forecast-backed data. */}
+            <PlantOrWait
+              decision={sampleDecision}
+              labels={{
+                question: t.verdictQuestion,
+                plant: t.plantNow,
+                wait: t.wait,
+                reason: decisionReason,
+                sample: t.sampleData,
+              }}
+            />
+            <RainChart
+              values={sampleRainfall}
+              labels={{
+                title: t.rainHistory,
+                caption: t.rainChartCaption,
+                unit: t.rainUnit,
+                daysAgoAxis: t.chartDaysAgo,
+                reference: t.chartReference,
+                highestDay: t.highestRainfallDay,
+                threshold: sampleRainfallReference,
+                dayAgo: t.dayAgo,
+                daysAgo: t.daysAgo,
+                sample: t.sampleData,
+              }}
+            />
 
             {activeCrop === 'Wheat' && (
               <>
@@ -772,7 +974,7 @@ function toggleLanguage() {
 
                 {loading && !crop && (
                   <div className="message-card">
-                    <span className="large-emoji">🌱</span>
+                    <span className="icon-tile"><Sprout size={28} aria-hidden="true" /></span>
                     <h3>{t.loadingTitle}</h3>
                     <p>{t.loadingText}</p>
                   </div>
@@ -780,7 +982,7 @@ function toggleLanguage() {
 
                 {error && !crop && (
                   <div className="message-card">
-                    <span className="large-emoji">💚</span>
+                    <span className="icon-tile"><Info size={28} aria-hidden="true" /></span>
                     <h3>{t.loadErrorTitle}</h3>
                     <p>{t.loadErrorText}</p>
                     <button className="primary-button" onClick={() => setRefreshKey((value) => value + 1)}>
@@ -793,7 +995,7 @@ function toggleLanguage() {
                   <>
                     {rawStatus.includes('critical') && (
                       <div className="attention-banner">
-                        <span className="banner-icon">!</span>
+                        <span className="banner-icon"><Info size={20} aria-hidden="true" /></span>
                         <div>
                           <strong>{t.criticalTitle}</strong>
                           <p>{t.criticalText}</p>
@@ -811,22 +1013,40 @@ function toggleLanguage() {
                         onClick={() => setRefreshKey((value) => value + 1)}
                         disabled={loading}
                       >
-                        {loading ? t.refreshing : `↻ ${t.refresh}`}
+                        {loading ? t.refreshing : <><RefreshCw size={18} aria-hidden="true" /> {t.refresh}</>}
                       </button>
                     </div>
 
                     <div className="metrics-grid">
-                      {metrics.map((metric) => (
-                        <article className="metric-card" key={metric.label}>
-                          <span className="metric-icon">{metric.icon}</span>
-                          <p className="metric-label">{metric.label}</p>
-                          <p className="metric-value">{metric.value ?? '—'}</p>
-                        </article>
-                      ))}
+                      {metrics.map((metric) => {
+                        const interpretation = getMetricInterpretation(metric)
+                        const rawValue = metric.value ?? '—'
+
+                        return (
+                          <article className="metric-card" key={metric.label}>
+                            <span className="metric-icon">{metric.icon}</span>
+                            <p className="metric-label">{metric.label}</p>
+                            <p className="metric-value">{interpretation.label}</p>
+                            <div
+                              className="metric-progress"
+                              role="progressbar"
+                              aria-label={`${metric.label}: ${interpretation.label}`}
+                              aria-valuemin={0}
+                              aria-valuemax={100}
+                              aria-valuenow={interpretation.progress}
+                            >
+                              <span style={{ width: `${interpretation.progress}%` }} />
+                            </div>
+                            <p className="metric-raw">
+                              {t.sampleReading}: {rawValue}
+                            </p>
+                          </article>
+                        )
+                      })}
                     </div>
 
                     <div className="data-footer">
-                      <span>🕒</span>
+                      <span><Clock3 size={18} aria-hidden="true" /></span>
                       <p>
                         {t.lastUpdated}{' '}
                         {crop.lastUpdated && !Number.isNaN(Date.parse(crop.lastUpdated))
@@ -842,7 +1062,7 @@ function toggleLanguage() {
 
             {activeCrop === 'Coffee' && (
               <div className="message-card coffee-message">
-                <span className="large-emoji">☕</span>
+                <span className="icon-tile"><Coffee size={28} aria-hidden="true" /></span>
                 <p className="eyebrow">{t.coffeeEyebrow}</p>
                 <h2>{t.coffeeTitle}</h2>
                 <p>{t.coffeeText}</p>
@@ -852,16 +1072,6 @@ function toggleLanguage() {
               </div>
             )}
 
-            <div className="help-strip">
-              <span className="help-icon">💡</span>
-              <div>
-                <strong>{t.needHelp}</strong>
-                <p>{t.needHelpText}</p>
-              </div>
-              <button className="text-button" onClick={() => setPage('guidance')}>
-                {t.learnMore} →
-              </button>
-            </div>
           </section>
         )}
 
@@ -875,7 +1085,7 @@ function toggleLanguage() {
 
             {activeCrop === 'Wheat' && crop ? (
               <div className="guidance-card">
-                <span className="guidance-icon">🔎</span>
+                <span className="guidance-icon"><Search size={22} aria-hidden="true" /></span>
                 <div>
                   <h2>{t.checkWheat}</h2>
                   <p>{t.wheatGuidance} "{crop.status}".</p>
@@ -885,7 +1095,7 @@ function toggleLanguage() {
               </div>
             ) : (
               <div className="guidance-card">
-                <span className="guidance-icon">🌱</span>
+                <span className="guidance-icon"><Sprout size={22} aria-hidden="true" /></span>
                 <div>
                   <h2>{t.guidanceNotReady}</h2>
                   <p>{t.guidanceNotReadyText}</p>
@@ -897,21 +1107,21 @@ function toggleLanguage() {
 
             <div className="guidance-list">
               <article>
-                <span>📊</span>
+                <span><Info size={22} aria-hidden="true" /></span>
                 <div>
                   <h3>{t.understandNumbers}</h3>
                   <p>{t.understandNumbersText}</p>
                 </div>
               </article>
               <article>
-                <span>🌦️</span>
+                <span><CloudRain size={22} aria-hidden="true" /></span>
                 <div>
                   <h3>{t.localConditions}</h3>
                   <p>{t.localConditionsText}</p>
                 </div>
               </article>
               <article>
-                <span>🤝</span>
+                <span><Sprout size={22} aria-hidden="true" /></span>
                 <div>
                   <h3>{t.askForHelp}</h3>
                   <p>{t.askForHelpText}</p>
@@ -928,7 +1138,6 @@ function toggleLanguage() {
 
       <footer className="app-footer">
         <span className="footer-brand">NEBULA</span>
-        <span>{t.growingTogether}</span>
         <span className="prototype-label">{t.prototype}</span>
       </footer>
     </div>
